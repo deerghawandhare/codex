@@ -1,0 +1,1127 @@
+import React, { useState, useRef, useEffect, useCallback } from "react";
+import {
+  Mic,
+  Keyboard,
+  Bell,
+  Home,
+  Video,
+  User,
+  LogOut,
+  Send,
+  X,
+  Volume2,
+  MoreVertical,
+  Languages,
+  CheckCircle2,
+  Search,
+  Bookmark,
+  Share2,
+  Play,
+  ChevronRight,
+  Camera,
+  Globe,
+  Moon,
+  MessageSquare,
+  HelpCircle,
+  Shield,
+  Save,
+} from "lucide-react";
+
+function YoutubeIcon({ size = 16, className = "" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"/>
+      <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" fill="currentColor"/>
+    </svg>
+  );
+}
+
+/**
+ * VINEETA 3.0 — AI Financial Guidance App with 2D Green Saree Lady Avatar & Real-Time Lip Sync
+ */
+
+const CHAT_ENDPOINT = "/api/chat";
+const NOTIF_ENDPOINT = "/api/notifications";
+const YOUTUBE_ENDPOINT = "/api/youtube/content";
+const PROFILE_ENDPOINT = "/api/user/profile";
+
+const STRINGS = {
+  en: {
+    tagline: "AI Financial Guidance",
+    greetingTitle: "Namaste! 🙏",
+    greetingBody: "I'm your AI Financial Guide. Here are a few things I can help you with:",
+    chips: ["Budget planning", "Investment advice", "Loan guidance", "Financial goal planning"],
+    prompt: "What would you like to know today?",
+    inputPlaceholder: "Type your question...",
+    keyboard: "Keyboard",
+    voice: "Voice",
+    listening: "Listening…",
+    tapToSpeak: "Tap to speak",
+    send: "Send",
+    home: "Home",
+    youtube: "YouTube",
+    notifications: "Notifications",
+    profile: "Profile",
+    notifPanelTitle: "Notifications",
+    noNotif: "No notifications right now.",
+    notifError: "Couldn't load live notifications — showing recent ones.",
+    comingSoon: "Coming soon",
+    comingSoonBody: "This section isn't wired up in this preview yet.",
+    exit: "Exit",
+    thinking: "Vineeta is typing…",
+    micNotSupported: "Voice input isn't supported in this browser. Please use the keyboard.",
+    switchToVoice: "Switch to voice",
+    replay: "Replay",
+    langToggle: "English ⇌ हिंदी",
+    offlineNotice: "Backend not reachable — showing sample data.",
+    searchVideos: "Search videos on finance, schemes, tips...",
+    recommended: "Recommended",
+    continueWatching: "Continue Watching",
+    recentlyViewed: "Recently Viewed",
+    viewAll: "View all",
+    personalDetails: "Personal Details",
+    viewMore: "View more",
+    name: "Name",
+    phoneNumber: "Phone Number",
+    primaryIncomeSource: "Primary Income Source",
+    secondaryIncomeSource: "Secondary Income Source",
+    settings: "Settings",
+    language: "Language",
+    darkMode: "Dark Mode",
+    contactSupport: "Contact Support",
+    logout: "Logout",
+    helpCenter: "Help Center",
+    notificationSettings: "Notification Settings",
+    privacySecurity: "Privacy & Security",
+    profileBannerTitle: "Small steps today, big freedom tomorrow.",
+    profileBannerSubtitle: "Stay consistent, keep learning, and watch your money grow.",
+  },
+  hi: {
+    tagline: "एआई वित्तीय मार्गदर्शन",
+    greetingTitle: "नमस्ते! 🙏",
+    greetingBody: "मैं आपकी एआई वित्तीय गाइड हूं। यहां कुछ चीज़ें हैं जिनमें मैं आपकी मदद कर सकती हूं:",
+    chips: ["बजट योजना", "निवेश सलाह", "ऋण मार्गदर्शन", "वित्तीय लक्ष्य योजना"],
+    prompt: "आज आप क्या जानना चाहेंगी?",
+    inputPlaceholder: "अपना सवाल लिखें...",
+    keyboard: "कीबोर्ड",
+    voice: "आवाज़",
+    listening: "सुन रही हूं…",
+    tapToSpeak: "बोलने के लिए दबाएं",
+    send: "भेजें",
+    home: "होम",
+    youtube: "यूट्यूब",
+    notifications: "सूचनाएं",
+    profile: "प्रोफ़ाइल",
+    notifPanelTitle: "सूचनाएं",
+    noNotif: "अभी कोई सूचना नहीं है।",
+    notifError: "लाइव सूचनाएं लोड नहीं हुईं — हाल की सूचनाएं दिखाई जा रही हैं।",
+    comingSoon: "जल्द आ रहा है",
+    comingSoonBody: "यह हिस्सा अभी इस प्रीव्यू में तैयार नहीं है।",
+    exit: "बाहर जाएं",
+    thinking: "विनीता लिख रही है…",
+    micNotSupported: "इस ब्राउज़र में आवाज़ इनपुट उपलब्ध नहीं है। कृपया कीबोर्ड का उपयोग करें।",
+    switchToVoice: "आवाज़ पर जाएं",
+    replay: "फिर सुनें",
+    langToggle: "English ⇌ हिंदी",
+    offlineNotice: "बैकएंड से जुड़ नहीं पाए — उदाहरण डेटा दिखाया जा रहा है।",
+    searchVideos: "वित्त, योजनाओं और सुझावों पर वीडियो खोजें...",
+    recommended: "सिफारिश की गई",
+    continueWatching: "देखना जारी रखें",
+    recentlyViewed: "हाल ही में देखे गए",
+    viewAll: "सभी देखें",
+    personalDetails: "व्यक्तिगत विवरण",
+    viewMore: "और देखें",
+    name: "नाम",
+    phoneNumber: "फ़ोन नंबर",
+    primaryIncomeSource: "प्राथमिक आय स्रोत",
+    secondaryIncomeSource: "द्वितीयक आय स्रोत",
+    settings: "सेटिंग्स",
+    language: "भाषा",
+    darkMode: "डार्क मोड",
+    contactSupport: "सहायता संपर्क",
+    logout: "लॉग आउट",
+    helpCenter: "सहायता केंद्र",
+    notificationSettings: "सूचना सेटिंग्स",
+    privacySecurity: "गोपनीयता और सुरक्षा",
+    profileBannerTitle: "आज के छोटे कदम, कल की बड़ी आज़ादी।",
+    profileBannerSubtitle: "निरंतर रहें, सीखते रहें, और अपने पैसों को बढ़ते हुए देखें।",
+  },
+  mr: {
+    tagline: "AI आर्थिक मार्गदर्शक",
+    greetingTitle: "नमस्कार! 🙏",
+    greetingBody: "मी तुमची AI आर्थिक मार्गदर्शक आहे. मी तुम्हाला खालील गोष्टींमध्ये मदत करू शकते:",
+    chips: ["बजट नियोजन", "गुंतवणूक सल्ला", "कर्ज मार्गदर्शन", "आर्थिक ध्येय नियोजन"],
+    prompt: "आज तुम्हाला काय जाणून घ्यायचे आहे?",
+    inputPlaceholder: "तुमचा प्रश्न इथे लिहा...",
+    keyboard: "कीबोर्ड",
+    voice: "आवाज",
+    listening: "ऐकत आहे…",
+    tapToSpeak: "बोलण्यासाठी दाबा",
+    send: "पाठवा",
+    home: "होम",
+    youtube: "यूट्यूब",
+    notifications: "सूचना",
+    profile: "प्रोफाइल",
+    notifPanelTitle: "सूचना",
+    noNotif: "सध्या कोणतीही सूचना नाही.",
+    notifError: "सूचना लोड झाल्या नाहीत — अलीकडील दाखवत आहे.",
+    comingSoon: "लवकरच येत आहे",
+    comingSoonBody: "हा भाग अजून पूर्ण झालेला नाही.",
+    exit: "बाहेर पडा",
+    thinking: "विनिता लिहीत आहे…",
+    micNotSupported: "या ब्राउझरमध्ये आवाज इनपुट समर्थित नाही. कृपया कीबोर्ड वापरा.",
+    switchToVoice: "आवाजावर जा",
+    replay: "पुन्हा ऐका",
+    langToggle: "भाषा बदला",
+    offlineNotice: "बॅकएंडशी कनेक्ट होऊ शकले नाही.",
+    searchVideos: "व्हिडिओ शोधा...",
+    recommended: "शिफारस केलेले",
+    continueWatching: "पाहणे सुरू ठेवा",
+    recentlyViewed: "नुकतेच पाहिलेले",
+    viewAll: "सर्व पहा",
+    personalDetails: "वैयक्तिक तपशील",
+    viewMore: "अधिक पहा",
+    name: "नाव",
+    phoneNumber: "फोन नंबर",
+    primaryIncomeSource: "प्राथमिक उत्पन्न स्रोत",
+    secondaryIncomeSource: "द्वितीयक उत्पन्न स्रोत",
+    settings: "सेटिंग्ज",
+    language: "भाषा",
+    darkMode: "डार्क मोड",
+    contactSupport: "सपोर्ट संपर्क",
+    logout: "लॉग आउट",
+    helpCenter: "मदत केंद्र",
+    notificationSettings: "सूचना सेटिंग्ज",
+    privacySecurity: "गोपनीयता आणि सुरक्षा",
+    profileBannerTitle: "आजची छोटी पावले, उद्याचे मोठे स्वातंत्र्य.",
+    profileBannerSubtitle: "शीखत राहा आणि तुमचे पैसे वाढताना पहा.",
+  }
+};
+
+const MOCK_NOTIFICATIONS = [
+  {
+    id: "n1",
+    title: "PM Jan Dhan Yojana — KYC update due",
+    deadline: "12 Aug 2026",
+    description: "Update your KYC details to keep your zero-balance account active.",
+  },
+  {
+    id: "n2",
+    title: "Loan EMI reminder",
+    deadline: "15 Aug 2026",
+    description: "Your next EMI of ₹1,200 is due. Set aside funds to avoid a late fee.",
+  },
+  {
+    id: "n3",
+    title: "New government scheme",
+    deadline: "31 Aug 2026",
+    description: "Mudra Yojana applications are open for small business loans up to ₹10 lakh.",
+  },
+];
+
+const MOCK_YOUTUBE_DATA = {
+  categories: [
+    "Saving Money", "Budgeting", "Government Schemes", "Insurance",
+    "Loans", "Farming Finance", "Women's Entrepreneurship", "Small Business",
+    "Digital Payments", "UPI", "Investments", "Self Help Groups"
+  ],
+  recommended: [
+    {
+      id: "rec-1",
+      title: "छोटी आदतें, बड़ी बचत – आसान तरीके से शुरू करें",
+      duration: "6:45",
+      language: "Hindi",
+      thumbnailBg: "from-teal-800 to-teal-600"
+    },
+    {
+      id: "rec-2",
+      title: "सरकारी योजनाओं का लाभ कैसे उठाएं? पूरी जानकारी",
+      duration: "8:12",
+      language: "Hindi",
+      thumbnailBg: "from-amber-700 to-amber-500"
+    },
+    {
+      id: "rec-3",
+      title: "महिलाओं के लिए टॉप 5 बिजनेस आइडियाज़",
+      duration: "7:30",
+      language: "Hindi",
+      thumbnailBg: "from-orange-700 to-amber-600"
+    }
+  ],
+  continueWatching: [
+    {
+      id: "cw-1",
+      title: "UPI से पेमेंट कैसे करें? पूरी जानकारी",
+      duration: "5:20",
+      language: "Hindi",
+      progress: 60,
+      thumbnailBg: "from-cyan-700 to-teal-800"
+    },
+    {
+      id: "cw-2",
+      title: "निवेश की शुरुआत कैसे करें? (2024 गाइड)",
+      duration: "6:15",
+      language: "Hindi",
+      progress: 40,
+      thumbnailBg: "from-emerald-700 to-green-800"
+    }
+  ],
+  recentlyViewed: [
+    {
+      id: "rv-1",
+      title: "बीमा क्यों ज़रूरी है? समझें आसान भाषा में",
+      duration: "4:50",
+      language: "Hindi"
+    },
+    {
+      id: "rv-2",
+      title: "छोटा बिजनेस कैसे शुरू करें? – स्टेप बाय स्टेप गाइड",
+      duration: "6:40",
+      language: "Hindi"
+    },
+    {
+      id: "rv-3",
+      title: "डिजिटल पेमेंट के फायदे और सुरक्षा टिप्स",
+      duration: "4:35",
+      language: "Hindi"
+    }
+  ]
+};
+
+const MOCK_PROFILE = {
+  name: "Priya Sharma",
+  phone: "+91 98765 43210",
+  primaryIncome: "Salary",
+  secondaryIncome: "Freelancing",
+  tagline: "Welcome back! You're building a stronger financial future."
+};
+
+function mockChatReply(message, language) {
+  const text = message.toLowerCase();
+  const replies = {
+    en: {
+      budget: "Let's build a simple budget. Tell me your monthly income and your biggest expenses, and I'll suggest how much to save.",
+      loan: "For loan guidance, tell me the amount you need and what it's for — a business, a home repair, or something else.",
+      invest: "For investing, we should first set aside an emergency fund, then look at low-risk options like a recurring deposit. Want a plan?",
+      default: "Thanks for sharing that. I'm running in preview mode right now, so this is a sample reply — once connected to the live Vineeta backend, you'll get a real, personalised answer here.",
+    },
+    hi: {
+      budget: "चलिए एक आसान बजट बनाते हैं। अपनी मासिक आय और सबसे बड़े खर्च बताइए, मैं बताऊंगी कितना बचाना चाहिए।",
+      loan: "ऋण मार्गदर्शन के लिए बताइए आपको कितनी राशि चाहिए और किस काम के लिए — व्यवसाय, घर की मरम्मत, या कुछ और।",
+      invest: "निवेश के लिए पहले एक आपातकालीन फंड बनाना चाहिए, फिर रिकरिंग डिपॉज़िट जैसे कम जोखिम वाले विकल्प देखेंगे। योजना बनाएं?",
+      default: "बताने के लिए धन्यवाद। यह अभी प्रीव्यू मोड में है, इसलिए यह एक उदाहरण उत्तर है — असली विनीता बैकएंड से जुड़ने पर आपको सही, व्यक्तिगत जवाब मिलेगा।",
+    },
+  };
+  const set = replies[language] || replies.en;
+  if (text.includes("budget") || text.includes("बजट")) return set.budget;
+  if (text.includes("loan") || text.includes("ऋण") || text.includes("लोन")) return set.loan;
+  if (text.includes("invest") || text.includes("निवेश")) return set.invest;
+  return set.default;
+}
+
+function makeUserId() {
+  return "guest-" + Math.random().toString(36).slice(2, 10);
+}
+
+// ---------- 2D Green Saree Lady Avatar ----------
+function VineetaAvatar({ listening, speaking }) {
+  return (
+    <div className="relative flex flex-col items-center pt-3 pb-1 select-none">
+      <div
+        className={`relative rounded-full overflow-hidden transition-all duration-300 border-2 border-teal-600 shadow-xl ${
+          listening
+            ? "ring-4 ring-amber-400 scale-105"
+            : speaking
+            ? "ring-4 ring-teal-400 scale-105 shadow-teal-400/50"
+            : "ring-2 ring-teal-200/70"
+        }`}
+        style={{
+          width: 136,
+          height: 136,
+        }}
+      >
+        {/* 2D Green Saree Lady Avatar Image */}
+        <img
+          src="/vinita_avatar.jpg"
+          alt="Vinita 2D Green Saree Lady Avatar"
+          className="w-full h-full object-cover transition-transform duration-150"
+          style={{
+            transform: speaking ? "scale(1.03) translateY(-1px)" : "scale(1)",
+          }}
+        />
+      </div>
+
+      {/* Speech Audio Waveforms */}
+      <div className="flex items-end gap-[3px] h-5 mt-2">
+        {Array.from({ length: 16 }).map((_, i) => (
+          <span
+            key={i}
+            className="w-[3px] rounded-full bg-teal-600"
+            style={{
+              height: speaking || listening ? undefined : 4,
+              animation:
+                speaking || listening
+                  ? `vineeta-wave 0.9s ease-in-out ${(i % 8) * 0.08}s infinite`
+                  : "none",
+              opacity: speaking || listening ? 1 : 0.35,
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ---------- Chat bubble ----------
+function ChatBubble({ msg, strings, onReplay }) {
+  if (msg.kind === "welcome") {
+    return (
+      <div className="bg-white rounded-3xl shadow-sm border border-teal-50 p-5 mx-1">
+        <p className="text-teal-700 font-bold text-lg mb-2">{strings.greetingTitle}</p>
+        <p className="text-slate-700 text-[15px] mb-3">{strings.greetingBody}</p>
+        <ul className="space-y-2 mb-3">
+          {strings.chips.map((c) => (
+            <li key={c} className="flex items-center gap-2 text-teal-700 font-medium text-[15px]">
+              <CheckCircle2 size={18} className="text-emerald-500 shrink-0" />
+              {c}
+            </li>
+          ))}
+        </ul>
+        <p className="text-slate-800 font-semibold text-[15px]">{strings.prompt}</p>
+      </div>
+    );
+  }
+
+  const isUser = msg.role === "user";
+  return (
+    <div className={`flex ${isUser ? "justify-end" : "justify-start"} px-1`}>
+      <div
+        className={`max-w-[82%] px-4 py-2.5 text-[15px] leading-snug shadow-sm ${
+          isUser
+            ? "bg-teal-700 text-white rounded-2xl rounded-br-sm"
+            : "bg-white text-slate-800 rounded-2xl rounded-bl-sm border border-teal-50"
+        }`}
+      >
+        <p className="whitespace-pre-wrap">{msg.text}</p>
+        {!isUser && (
+          <button
+            onClick={() => onReplay(msg.text)}
+            aria-label={strings.replay}
+            className="mt-1 -ml-1 text-teal-500 hover:text-teal-700 inline-flex items-center gap-1 text-xs font-semibold"
+          >
+            <Volume2 size={13} /> {strings.replay}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function TypingBubble() {
+  return (
+    <div className="flex justify-start px-1">
+      <div className="bg-white border border-teal-50 rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm flex gap-1 items-center">
+        {[0, 1, 2].map((i) => (
+          <span
+            key={i}
+            className="w-1.5 h-1.5 rounded-full bg-teal-400"
+            style={{ animation: `vineeta-bounce 1s ease-in-out ${i * 0.15}s infinite` }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export default function VineetaApp() {
+  const [language, setLanguage] = useState("en");
+  const t = STRINGS[language] || STRINGS.en;
+
+  const [userId] = useState(makeUserId);
+  const [messages, setMessages] = useState([{ id: "welcome", kind: "welcome" }]);
+  const [loading, setLoading] = useState(false);
+
+  const [inputMode, setInputMode] = useState("voice");
+  const [textValue, setTextValue] = useState("");
+  const [isListening, setIsListening] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [viseme, setViseme] = useState("neutral");
+  const [micNote, setMicNote] = useState("");
+
+  const [activeTab, setActiveTab] = useState("home");
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [notifLoaded, setNotifLoaded] = useState(false);
+  const [notifOffline, setNotifOffline] = useState(false);
+
+  // YouTube and Profile state
+  const [youtubeData, setYoutubeData] = useState(MOCK_YOUTUBE_DATA);
+  const [profileData, setProfileData] = useState(MOCK_PROFILE);
+
+  const scrollRef = useRef(null);
+  const recognitionRef = useRef(null);
+  const lipSyncTimerRef = useRef(null);
+  const silenceTimerRef = useRef(null);
+  const transcriptRef = useRef("");
+
+  const SpeechRecognitionCtor =
+    typeof window !== "undefined" ? window.SpeechRecognition || window.webkitSpeechRecognition : null;
+  const micSupported = !!SpeechRecognitionCtor;
+  const speechSynthSupported = typeof window !== "undefined" && !!window.speechSynthesis;
+
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+  }, [messages, loading]);
+
+  // Setup Speech Recognition with 3-second continuous silence auto-submit
+  useEffect(() => {
+    if (!SpeechRecognitionCtor) return;
+    const recog = new SpeechRecognitionCtor();
+    recog.continuous = true; 
+    recog.interimResults = true;
+    recog.lang = language === "hi" ? "hi-IN" : language === "mr" ? "mr-IN" : "en-IN";
+
+    recog.onstart = () => {
+      transcriptRef.current = "";
+    };
+
+    recog.onresult = (e) => {
+      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+
+      let currentText = "";
+      for (let i = 0; i < e.results.length; i++) {
+        currentText += e.results[i][0].transcript;
+      }
+      transcriptRef.current = currentText;
+      setTextValue(currentText);
+
+      silenceTimerRef.current = setTimeout(() => {
+        try { recog.stop(); } catch {}
+      }, 3000);
+    };
+
+    recog.onerror = () => setIsListening(false);
+    
+    recog.onend = () => {
+      setIsListening(false);
+      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+      
+      if (transcriptRef.current.trim()) {
+        sendMessage(transcriptRef.current, { viaVoice: true });
+        transcriptRef.current = "";
+      }
+    };
+
+    recognitionRef.current = recog;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [language]);
+
+  const speak = useCallback(
+    (text, forcedLang) => {
+      if (!speechSynthSupported || !text) return;
+      window.speechSynthesis.cancel();
+      if (lipSyncTimerRef.current) clearInterval(lipSyncTimerRef.current);
+
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = (forcedLang || language) === "hi" ? "hi-IN" : (forcedLang || language) === "mr" ? "mr-IN" : "en-IN";
+      utter.rate = 0.95;
+
+      const visemeSequence = ["open", "wide", "smile", "round", "open", "closed"];
+      let visemeIdx = 0;
+
+      utter.onstart = () => {
+        setIsSpeaking(true);
+        lipSyncTimerRef.current = setInterval(() => {
+          setViseme(visemeSequence[visemeIdx % visemeSequence.length]);
+          visemeIdx++;
+        }, 120);
+      };
+
+      utter.onboundary = (e) => {
+        if (e.name === "word") {
+          const char = e.utterance.text.charAt(e.charIndex).toLowerCase();
+          if (["a", "e", "i"].includes(char)) setViseme("wide");
+          else if (["o", "u", "w"].includes(char)) setViseme("round");
+          else if (["m", "b", "p"].includes(char)) setViseme("closed");
+          else setViseme("open");
+        }
+      };
+
+      const stopSpeaking = () => {
+        setIsSpeaking(false);
+        setViseme("neutral");
+        if (lipSyncTimerRef.current) clearInterval(lipSyncTimerRef.current);
+      };
+
+      utter.onend = stopSpeaking;
+      utter.onerror = stopSpeaking;
+
+      window.speechSynthesis.speak(utter);
+    },
+    [language, speechSynthSupported]
+  );
+
+  const sendMessage = useCallback(
+    async (rawText, { viaVoice = false } = {}) => {
+      const text = rawText.trim();
+      if (!text || loading) return;
+
+      const userMsg = { id: Date.now() + "-u", role: "user", text };
+      setMessages((prev) => [...prev, userMsg]);
+      setTextValue("");
+      setLoading(true);
+
+      let reply = "";
+      let replyLang = language;
+      try {
+        const res = await fetch(CHAT_ENDPOINT, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ user_id: userId, message: text, language }),
+        });
+        if (!res.ok) throw new Error("Bad response");
+        const data = await res.json();
+        reply = data.reply;
+        replyLang = data.language || language;
+      } catch (err) {
+        reply = mockChatReply(text, language);
+      }
+
+      const assistantMsg = { id: Date.now() + "-a", role: "assistant", text: reply };
+      setMessages((prev) => [...prev, assistantMsg]);
+      setLoading(false);
+
+      if (viaVoice) speak(reply, replyLang);
+    },
+    [language, loading, speak, userId]
+  );
+
+  const toggleMic = () => {
+    if (!micSupported) {
+      setMicNote(t.micNotSupported);
+      return;
+    }
+    setMicNote("");
+    if (isListening) {
+      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+      recognitionRef.current?.stop();
+      setIsListening(false);
+      if (transcriptRef.current.trim()) {
+        sendMessage(transcriptRef.current.trim(), { viaVoice: true });
+        transcriptRef.current = "";
+      }
+    } else {
+      try {
+        transcriptRef.current = "";
+        setTextValue("");
+        recognitionRef.current?.start();
+        setIsListening(true);
+      } catch {
+        setIsListening(false);
+      }
+    }
+  };
+
+  const toggleLanguage = () => setLanguage((l) => (l === "en" ? "hi" : l === "hi" ? "mr" : "en"));
+
+  // Fetch Notifications, YouTube and Profile data
+  const fetchAppData = useCallback(async () => {
+    try {
+      const resNotif = await fetch(`${NOTIF_ENDPOINT}?user_id=${encodeURIComponent(userId)}`);
+      if (resNotif.ok) {
+        const data = await resNotif.json();
+        setNotifications(data.notifications || []);
+        setNotifOffline(false);
+      } else {
+        throw new Error();
+      }
+    } catch {
+      setNotifications(MOCK_NOTIFICATIONS);
+      setNotifOffline(true);
+    } finally {
+      setNotifLoaded(true);
+    }
+
+    try {
+      const resYt = await fetch(YOUTUBE_ENDPOINT);
+      if (resYt.ok) {
+        const json = await resYt.json();
+        if (json.success) setYoutubeData(json.data);
+      }
+    } catch {
+      setYoutubeData(MOCK_YOUTUBE_DATA);
+    }
+
+    try {
+      const resProf = await fetch(PROFILE_ENDPOINT);
+      if (resProf.ok) {
+        const json = await resProf.json();
+        if (json.success) setProfileData(json.profile);
+      }
+    } catch {
+      setProfileData(MOCK_PROFILE);
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    fetchAppData();
+  }, [fetchAppData]);
+
+  const openNotifications = () => {
+    setActiveTab("notifications");
+    setNotifOpen(true);
+  };
+
+  const handleTextSubmit = (e) => {
+    e.preventDefault();
+    sendMessage(textValue);
+  };
+
+  // Category chip background tint generator for YouTube view
+  const categoryBgColors = [
+    "bg-emerald-50 text-emerald-800 border-emerald-100",
+    "bg-amber-50 text-amber-800 border-amber-100",
+    "bg-blue-50 text-blue-800 border-blue-100",
+    "bg-purple-50 text-purple-800 border-purple-100",
+    "bg-orange-50 text-orange-800 border-orange-100",
+    "bg-green-50 text-green-800 border-green-100",
+    "bg-rose-50 text-rose-800 border-rose-100",
+    "bg-sky-50 text-sky-800 border-sky-100",
+  ];
+
+  return (
+    <div className="h-screen w-full flex flex-col bg-[#FBF8F2] overflow-hidden" style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}>
+      <style>{`
+        @keyframes vineeta-wave {
+          0%, 100% { height: 4px; }
+          50% { height: 22px; }
+        }
+        @keyframes vineeta-bounce {
+          0%, 100% { transform: translateY(0); opacity: 0.5; }
+          50% { transform: translateY(-4px); opacity: 1; }
+        }
+        @keyframes vineeta-pulse-ring {
+          0% { box-shadow: 0 0 0 0 rgba(20,137,125,0.35); }
+          100% { box-shadow: 0 0 0 16px rgba(20,137,125,0); }
+        }
+        * { scrollbar-width: thin; }
+      `}</style>
+
+      {/* Top Header bar */}
+      <header className="flex items-center justify-between px-4 py-3 bg-[#FBF8F2] border-b border-teal-100 shrink-0">
+        <button aria-label="Menu" className="text-slate-500 hover:text-slate-700">
+          <MoreVertical size={20} />
+        </button>
+        <div className="flex flex-col items-center">
+          <div className="flex items-center gap-1.5">
+            <span
+              className="inline-flex items-center justify-center w-6 h-6 rounded-full text-white text-xs font-bold"
+              style={{ background: "linear-gradient(135deg,#1D7A6C,#0F5C52)" }}
+            >
+              V
+            </span>
+            <span className="text-teal-800 font-bold text-lg tracking-tight">Vineeta</span>
+          </div>
+          <span className="text-teal-600 text-[11px] -mt-0.5">{t.tagline}</span>
+        </div>
+        <button className="flex flex-col items-center text-orange-600 hover:text-orange-700 leading-none gap-0.5">
+          <LogOut size={18} />
+          <span className="text-[10px]">{t.exit}</span>
+        </button>
+      </header>
+
+      {/* ================= HOME TAB ================= */}
+      {activeTab === "home" && (
+        <>
+          <VineetaAvatar listening={isListening} speaking={isSpeaking} viseme={viseme} />
+
+          <main ref={scrollRef} className="flex-1 overflow-y-auto px-3 py-2 space-y-3">
+            {messages.map((m) => (
+              <ChatBubble key={m.id} msg={m} strings={t} onReplay={speak} />
+            ))}
+            {loading && <TypingBubble />}
+          </main>
+
+          <div className="shrink-0 bg-[#FBF8F2] border-t border-teal-100 px-4 pt-2 pb-2">
+            {micNote && (
+              <p className="text-center text-[12px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg py-1 mb-2">
+                {micNote}
+              </p>
+            )}
+
+            {inputMode === "text" ? (
+              <form onSubmit={handleTextSubmit} className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setInputMode("voice")}
+                  aria-label={t.switchToVoice}
+                  className="shrink-0 w-10 h-10 rounded-full bg-white border border-teal-200 flex items-center justify-center text-teal-700"
+                >
+                  <Mic size={18} />
+                </button>
+                <input
+                  autoFocus
+                  value={textValue}
+                  onChange={(e) => setTextValue(e.target.value)}
+                  placeholder={t.inputPlaceholder}
+                  className="flex-1 rounded-full border border-teal-200 bg-white px-4 py-2.5 text-[15px] text-slate-800 outline-none focus:ring-2 focus:ring-teal-300"
+                />
+                <button
+                  type="submit"
+                  disabled={!textValue.trim() || loading}
+                  aria-label={t.send}
+                  className="shrink-0 w-10 h-10 rounded-full bg-teal-700 disabled:opacity-40 flex items-center justify-center text-white"
+                >
+                  <Send size={17} />
+                </button>
+              </form>
+            ) : (
+              <div className="flex items-center justify-between">
+                <button
+                  onClick={() => setInputMode("text")}
+                  className="flex flex-col items-center gap-1 text-slate-600 w-16"
+                >
+                  <span className="w-12 h-12 rounded-2xl bg-white border border-teal-100 shadow-sm flex items-center justify-center text-teal-700">
+                    <Keyboard size={20} />
+                  </span>
+                  <span className="text-[11px]">{t.keyboard}</span>
+                </button>
+
+                <button
+                  onClick={toggleMic}
+                  aria-label={isListening ? t.listening : t.tapToSpeak}
+                  className="relative w-[74px] h-[74px] rounded-full flex items-center justify-center text-white shrink-0"
+                  style={{
+                    background: "linear-gradient(135deg,#1D7A6C,#0F5C52)",
+                    animation: isListening ? "vineeta-pulse-ring 1.4s ease-out infinite" : "none",
+                  }}
+                >
+                  <Mic size={28} />
+                </button>
+
+                <button
+                  onClick={toggleLanguage}
+                  className="flex flex-col items-center gap-1 text-slate-600 w-16"
+                >
+                  <span className="w-12 h-12 rounded-2xl bg-white border border-teal-100 shadow-sm flex items-center justify-center text-teal-700 font-bold">
+                    <Globe size={20} />
+                  </span>
+                  <span className="text-[10px] leading-tight text-center font-semibold text-teal-800 uppercase">{language === "en" ? "ENG" : language === "hi" ? "हिंदी" : "मराठी"}</span>
+                </button>
+              </div>
+            )}
+            {inputMode === "voice" && (
+              <p className="text-center text-[12px] text-teal-500 mt-1.5">
+                {isListening ? t.listening : t.tapToSpeak}
+              </p>
+            )}
+          </div>
+        </>
+      )}
+
+      {/* ================= YOUTUBE TAB ================= */}
+      {activeTab === "youtube" && (
+        <main className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
+          {/* Search bar */}
+          <div className="relative">
+            <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+              <Search size={18} />
+            </span>
+            <input
+              type="text"
+              placeholder={t.searchVideos}
+              className="w-full bg-white border border-teal-100 rounded-full pl-10 pr-10 py-2.5 text-[14px] text-slate-800 shadow-sm outline-none focus:ring-2 focus:ring-teal-300"
+            />
+            <span className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-teal-700">
+              <Mic size={18} />
+            </span>
+          </div>
+
+          {/* Category Chips Grid */}
+          <div className="grid grid-cols-4 gap-2">
+            {youtubeData.categories.map((cat, idx) => (
+              <button
+                key={cat}
+                className={`p-2 rounded-xl text-center text-[11px] font-medium border shadow-xs transition-transform active:scale-95 ${
+                  categoryBgColors[idx % categoryBgColors.length]
+                }`}
+              >
+                <span className="line-clamp-2">{cat}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Recommended Section */}
+          <section className="space-y-2.5">
+            <div className="flex items-center justify-between">
+              <h2 className="text-teal-900 font-bold text-base">{t.recommended}</h2>
+              <button className="text-teal-700 text-xs font-semibold flex items-center gap-0.5">
+                {t.viewAll} <ChevronRight size={14} />
+              </button>
+            </div>
+            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
+              {youtubeData.recommended.map((vid) => (
+                <div key={vid.id} className="w-[230px] shrink-0 bg-white rounded-2xl border border-teal-50 shadow-sm overflow-hidden flex flex-col">
+                  <div className={`h-32 bg-gradient-to-br ${vid.thumbnailBg || "from-teal-800 to-teal-600"} relative p-3 flex flex-col justify-between`}>
+                    <div className="flex justify-between items-start">
+                      <span className="bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1">
+                        <YoutubeIcon size={12} /> YT
+                      </span>
+                      <span className="bg-black/60 text-white text-[11px] px-1.5 py-0.5 rounded font-medium">
+                        {vid.duration}
+                      </span>
+                    </div>
+                    <p className="text-white font-bold text-sm line-clamp-2 drop-shadow-sm">{vid.title}</p>
+                  </div>
+                  <div className="p-3 flex items-center justify-between bg-white">
+                    <span className="bg-emerald-50 text-emerald-800 text-[11px] px-2 py-0.5 rounded-full font-medium">
+                      {vid.language}
+                    </span>
+                    <div className="flex items-center gap-2 text-slate-500">
+                      <button aria-label="Watch" className="w-8 h-8 rounded-full bg-teal-50 text-teal-700 flex items-center justify-center hover:bg-teal-100">
+                        <Play size={14} />
+                      </button>
+                      <button aria-label="Bookmark" className="hover:text-teal-700"><Bookmark size={15} /></button>
+                      <button aria-label="Share" className="hover:text-teal-700"><Share2 size={15} /></button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* Continue Watching Section */}
+          <section className="space-y-2.5">
+            <div className="flex items-center justify-between">
+              <h2 className="text-teal-900 font-bold text-base">{t.continueWatching}</h2>
+              <button className="text-teal-700 text-xs font-semibold flex items-center gap-0.5">
+                {t.viewAll} <ChevronRight size={14} />
+              </button>
+            </div>
+            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
+              {youtubeData.continueWatching.map((vid) => (
+                <div key={vid.id} className="w-[220px] shrink-0 bg-white rounded-2xl border border-teal-50 shadow-sm p-3 flex flex-col justify-between">
+                  <div className={`h-24 rounded-xl bg-gradient-to-r ${vid.thumbnailBg} relative p-2.5 flex flex-col justify-end mb-2`}>
+                    <span className="absolute top-2 right-2 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded">
+                      {vid.duration}
+                    </span>
+                    <p className="text-white text-xs font-bold line-clamp-1">{vid.title}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-[11px] text-slate-500 font-medium">
+                      <span>{vid.language}</span>
+                      <span>{vid.progress}%</span>
+                    </div>
+                    <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                      <div className="h-full bg-teal-600 rounded-full" style={{ width: `${vid.progress}%` }} />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* Recently Viewed Section */}
+          <section className="space-y-2 pb-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-teal-900 font-bold text-base">{t.recentlyViewed}</h2>
+              <button className="text-teal-700 text-xs font-semibold flex items-center gap-0.5">
+                {t.viewAll} <ChevronRight size={14} />
+              </button>
+            </div>
+            <div className="space-y-2">
+              {youtubeData.recentlyViewed.map((vid) => (
+                <div key={vid.id} className="bg-white rounded-2xl p-3 border border-teal-50 shadow-sm flex items-center justify-between gap-3">
+                  <div className="w-16 h-12 rounded-lg bg-teal-800 shrink-0 flex items-center justify-center text-white text-xs font-bold">
+                    {vid.duration}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-slate-800 text-[13px] font-semibold line-clamp-1">{vid.title}</p>
+                    <span className="inline-block mt-0.5 bg-emerald-50 text-emerald-800 text-[10px] px-2 py-0.5 rounded-full font-medium">
+                      {vid.language}
+                    </span>
+                  </div>
+                  <button aria-label="Play" className="w-8 h-8 rounded-full bg-teal-50 text-teal-700 flex items-center justify-center shrink-0">
+                    <Play size={14} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </section>
+        </main>
+      )}
+
+      {/* ================= PROFILE TAB ================= */}
+      {activeTab === "profile" && (
+        <main className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+          {/* Profile Header & Avatar */}
+          <div className="flex flex-col items-center text-center">
+            <div className="relative">
+              <div className="w-24 h-24 rounded-full bg-teal-100 border-2 border-teal-600 overflow-hidden flex items-center justify-center text-teal-800 font-bold text-2xl shadow-md">
+                {profileData.name.charAt(0)}
+              </div>
+              <span className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-teal-700 border-2 border-white text-white flex items-center justify-center shadow">
+                <Camera size={14} />
+              </span>
+            </div>
+            <h1 className="text-teal-900 font-bold text-xl mt-2">{profileData.name}</h1>
+            <p className="text-slate-600 text-xs mt-0.5">👋 {profileData.tagline}</p>
+          </div>
+
+          {/* Personal Details Card */}
+          <div className="bg-white rounded-3xl p-4 border border-teal-50 shadow-sm space-y-3">
+            <div className="flex items-center justify-between">
+              <h2 className="text-teal-900 font-bold text-sm flex items-center gap-1.5">
+                <User size={16} className="text-teal-700" /> {t.personalDetails}
+              </h2>
+              <button className="text-teal-700 text-xs font-semibold flex items-center gap-0.5">
+                {t.viewMore} <ChevronRight size={14} />
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-3 pt-1">
+              <div className="bg-teal-50/50 p-2.5 rounded-2xl border border-teal-100/50">
+                <span className="text-slate-500 text-[11px] block">{t.name}</span>
+                <span className="text-slate-800 font-semibold text-[13px]">{profileData.name}</span>
+              </div>
+              <div className="bg-teal-50/50 p-2.5 rounded-2xl border border-teal-100/50">
+                <span className="text-slate-500 text-[11px] block">{t.phoneNumber}</span>
+                <span className="text-slate-800 font-semibold text-[13px]">{profileData.phone}</span>
+              </div>
+              <div className="bg-teal-50/50 p-2.5 rounded-2xl border border-teal-100/50">
+                <span className="text-slate-500 text-[11px] block">{t.primaryIncomeSource}</span>
+                <span className="text-slate-800 font-semibold text-[13px]">{profileData.primaryIncome}</span>
+              </div>
+              <div className="bg-teal-50/50 p-2.5 rounded-2xl border border-teal-100/50">
+                <span className="text-slate-500 text-[11px] block">{t.secondaryIncomeSource}</span>
+                <span className="text-slate-800 font-semibold text-[13px]">{profileData.secondaryIncome}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Settings Section */}
+          <div className="bg-white rounded-3xl p-4 border border-teal-50 shadow-sm space-y-2">
+            <h2 className="text-teal-900 font-bold text-sm mb-2">{t.settings}</h2>
+            <div className="space-y-1">
+              <ProfileSettingItem icon={<Globe size={18} className="text-teal-700" />} label={t.language} value={language === "en" ? "English" : language === "hi" ? "हिंदी" : "मराठी"} onClick={toggleLanguage} />
+              <ProfileSettingItem icon={<HelpCircle size={18} className="text-teal-700" />} label={t.helpCenter} />
+              <ProfileSettingItem icon={<Moon size={18} className="text-teal-700" />} label={t.darkMode} value="Off" />
+              <ProfileSettingItem icon={<Bell size={18} className="text-teal-700" />} label={t.notificationSettings} />
+              <ProfileSettingItem icon={<MessageSquare size={18} className="text-teal-700" />} label={t.contactSupport} />
+              <ProfileSettingItem icon={<Shield size={18} className="text-teal-700" />} label={t.privacySecurity} />
+              <ProfileSettingItem icon={<LogOut size={18} className="text-orange-600" />} label={t.logout} isRed />
+            </div>
+          </div>
+
+          {/* Bottom Banner */}
+          <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-amber-50 rounded-3xl p-4 border border-teal-100 flex items-center justify-between mb-4">
+            <div className="space-y-1 pr-2">
+              <h3 className="text-teal-900 font-bold text-xs">{t.profileBannerTitle}</h3>
+              <p className="text-slate-600 text-[11px] leading-snug">{t.profileBannerSubtitle}</p>
+            </div>
+            <div className="w-12 h-12 rounded-2xl bg-teal-700 text-white flex items-center justify-center shrink-0 font-bold text-lg shadow">
+              🌱
+            </div>
+          </div>
+        </main>
+      )}
+
+      {/* ================= NOTIFICATIONS TAB FALLBACK ================= */}
+      {activeTab === "notifications" && !notifOpen && (
+        <main className="flex-1 flex items-center justify-center px-8 text-center">
+          <div>
+            <p className="text-teal-800 font-bold text-lg mb-1">{t.notifications}</p>
+            <button onClick={() => setNotifOpen(true)} className="mt-2 text-teal-700 underline text-sm">
+              {t.notifPanelTitle}
+            </button>
+          </div>
+        </main>
+      )}
+
+      {/* Bottom Navigation Bar */}
+      <nav className="shrink-0 bg-white border-t border-teal-100 flex justify-around items-center py-2 px-1">
+        <NavButton icon={<Home size={20} />} label={t.home} active={activeTab === "home"} onClick={() => setActiveTab("home")} />
+        <NavButton icon={<YoutubeIcon size={20} />} label={t.youtube} active={activeTab === "youtube"} onClick={() => setActiveTab("youtube")} />
+        <NavButton
+          icon={
+            <span className="relative">
+              <Bell size={20} />
+              {notifLoaded && notifications.length > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-red-500" />
+              )}
+            </span>
+          }
+          label={t.notifications}
+          active={activeTab === "notifications"}
+          onClick={openNotifications}
+        />
+        <NavButton icon={<User size={20} />} label={t.profile} active={activeTab === "profile"} onClick={() => setActiveTab("profile")} />
+      </nav>
+
+      {/* Notifications Drawer Modal */}
+      {notifOpen && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40" onClick={() => setNotifOpen(false)}>
+          <div
+            className="w-full max-w-md bg-white rounded-t-3xl shadow-xl max-h-[75vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-5 py-4 border-b border-teal-50 shrink-0">
+              <h2 className="text-teal-800 font-bold text-lg">{t.notifPanelTitle}</h2>
+              <button onClick={() => setNotifOpen(false)} aria-label="Close" className="text-slate-400 hover:text-slate-600">
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="overflow-y-auto px-5 py-3 space-y-3">
+              {notifOffline && (
+                <p className="text-[12px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-1.5">
+                  {t.notifError}
+                </p>
+              )}
+              {notifications.length === 0 && notifLoaded && (
+                <p className="text-slate-500 text-sm text-center py-6">{t.noNotif}</p>
+              )}
+              {notifications.map((n) => (
+                <div key={n.id} className="border border-teal-50 rounded-2xl p-3.5">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="text-slate-800 font-semibold text-[14px]">{n.title}</p>
+                    <span className="shrink-0 text-[11px] font-medium text-orange-700 bg-orange-50 border border-orange-100 rounded-full px-2 py-0.5">
+                      {n.deadline}
+                    </span>
+                  </div>
+                  <p className="text-slate-500 text-[13px] mt-1">{n.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function NavButton({ icon, label, active, onClick }) {
+  return (
+    <button onClick={onClick} className={`flex flex-col items-center gap-0.5 px-3 py-1 ${active ? "text-teal-700" : "text-slate-400"}`}>
+      {icon}
+      <span className="text-[10px] font-medium">{label}</span>
+      <span className={`h-0.5 w-5 rounded-full mt-0.5 ${active ? "bg-teal-700" : "bg-transparent"}`} />
+    </button>
+  );
+}
+
+function ProfileSettingItem({ icon, label, value, onClick, isRed }) {
+  return (
+    <button onClick={onClick} className="w-full flex items-center justify-between p-2.5 rounded-2xl hover:bg-teal-50/50 transition-colors">
+      <div className="flex items-center gap-3">
+        <div className={`w-9 h-9 rounded-xl ${isRed ? "bg-orange-50" : "bg-teal-50"} flex items-center justify-center`}>
+          {icon}
+        </div>
+        <span className={`text-[14px] font-medium ${isRed ? "text-orange-600" : "text-slate-800"}`}>{label}</span>
+      </div>
+      <div className="flex items-center gap-2">
+        {value && <span className="text-xs text-slate-400 font-medium">{value}</span>}
+        <ChevronRight size={16} className="text-slate-400" />
+      </div>
+    </button>
+  );
+}
