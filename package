@@ -1,0 +1,11 @@
+{
+  "name": "vinita-3.0",
+  "version": "3.0.0",
+  "private": true,
+  "description": "Vineeta 3.0 — AI Financial-Literacy Assistant for Rural Women",
+  "scripts": {
+    "dev:backend": "cd backend && uvicorn main:app --reload --port 8000",
+    "dev:frontend": "cd frontend && npm run dev",
+    "build:frontend": "cd frontend && npm run build"
+  }
+}
